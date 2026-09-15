@@ -141,6 +141,10 @@
         {
           "path": "packages/Microsoft.Windows.SDK.BuildTools.MSIX/1.7.251221100/package.nuspec",
           "sha256": "8450430fbd207eb0a0cd876bb3b5f553a43c2aa85c6ae79d916df1acce77e07c"
+        },
+        {
+          "path": "packages/Microsoft.Windows.SDK.BuildTools.MSIX/1.7.251221100/sdk_license.txt",
+          "sha256": "a7a5c7e7ff998558983d6aca2702117c328aeb0c6404d298cb275f5623c6fd13"
         }
       ]
     },

@@ -80,3 +80,7 @@ Generated\ Files/
 
 # These profiles contain only portable, public build settings
 !Properties/PublishProfiles/*.pubxml
+
+# These are package-name directories, not user databases or installer binaries.
+!licenses/packages/Microsoft.Data.Sqlite/
+!licenses/packages/Microsoft.Windows.SDK.BuildTools.MSIX/

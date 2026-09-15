@@ -34,8 +34,8 @@ $appProcess = Get-Process -Id $AppProcessId
 $windowHandle = $appProcess.MainWindowHandle
 if ($windowHandle -eq [IntPtr]::Zero) { throw 'Application has no visible main window.' }
 if ($Action -eq 'Close') { $appProcess.CloseMainWindow(); return }
-[TimeTraceNative]::ShowWindow($windowHandle, 9) | Out-Null
-[TimeTraceNative]::SetForegroundWindow($windowHandle) | Out-Null
+# Native UI Automation and PrintWindow do not need to steal foreground focus.
+# Only coordinate-based fallbacks below activate the test window.
 Start-Sleep -Milliseconds 350
 $rootElement = [System.Windows.Automation.AutomationElement]::FromHandle($windowHandle)
 function Find-Control {
@@ -72,6 +72,9 @@ switch ($Action) {
             break
         }
         $bounds = $control.Current.BoundingRectangle
+        [TimeTraceNative]::ShowWindow($windowHandle, 9) | Out-Null
+        [TimeTraceNative]::SetForegroundWindow($windowHandle) | Out-Null
+        Start-Sleep -Milliseconds 200
         [TimeTraceNative]::SetCursorPos([int]($bounds.X + $bounds.Width/2), [int]($bounds.Y + $bounds.Height/2)) | Out-Null
         [TimeTraceNative]::mouse_event(2, 0, 0, 0, [UIntPtr]::Zero)
         [TimeTraceNative]::mouse_event(4, 0, 0, 0, [UIntPtr]::Zero)

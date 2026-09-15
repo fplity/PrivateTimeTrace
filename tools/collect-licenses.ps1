@@ -33,6 +33,11 @@ $inventory = foreach ($key in ($packages | Sort-Object)) {
     New-Item -ItemType Directory -Path $destination -Force | Out-Null
     # Preserve complete original files, including nested notices; never rewrite them.
     $licenseFiles = @(Get-ChildItem -LiteralPath $source -Recurse -File | Where-Object { $_.Name -match '^(licen[cs]e|copying|notice|third.?party.?notices?)([._-]|$)' -and $_.Extension -notin @('.dll','.xml','.json') })
+    if ($license -and $license.GetAttribute('type') -eq 'file') {
+        $declaredFile = [IO.Path]::GetFullPath((Join-Path $source $license.InnerText))
+        if (!$declaredFile.StartsWith(([IO.Path]::GetFullPath($source) + '\'), [StringComparison]::OrdinalIgnoreCase) -or !(Test-Path -LiteralPath $declaredFile)) { throw "Missing or unsafe declared license file: $key" }
+        $licenseFiles = @($licenseFiles + (Get-Item -LiteralPath $declaredFile) | Sort-Object FullName -Unique)
+    }
     foreach ($file in $licenseFiles) {
         $relative = [IO.Path]::GetRelativePath($source, $file.FullName)
         $target = Join-Path $destination $relative
