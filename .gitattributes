@@ -1,0 +1,12 @@
+* text=auto
+*.cs text eol=crlf
+*.xaml text eol=crlf
+*.ps1 text eol=crlf
+*.nsi text eol=crlf
+*.md text eol=lf
+*.yml text eol=lf
+*.png binary
+*.ico binary
+*.rtf binary
+# Original upstream notices must remain byte-for-byte intact (including line endings).
+licenses/** -text -whitespace

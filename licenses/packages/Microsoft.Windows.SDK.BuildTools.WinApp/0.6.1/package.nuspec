@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>Microsoft.Windows.SDK.BuildTools.WinApp</id>
+    <version>0.6.1</version>
+    <authors>Microsoft</authors>
+    <license type="expression">MIT</license>
+    <licenseUrl>https://licenses.nuget.org/MIT</licenseUrl>
+    <icon>icon.png</icon>
+    <readme>README.md</readme>
+    <projectUrl>https://github.com/microsoft/WinAppCli</projectUrl>
+    <description>Enables 'dotnet run' for packaged Windows applications. This package provides MSBuild targets that integrate with the .NET CLI to build, register, and launch packaged applications seamlessly.</description>
+    <copyright>© Microsoft Corporation. All rights reserved.</copyright>
+    <tags>winui msix packaged dotnet-run msbuild build-tools</tags>
+    <repository type="git" url="https://github.com/microsoft/WinAppCli.git" commit="d9a8d0f8ef192fa3ce07febdbe178606ea5fb4f5" />
+  </metadata>
+</package>

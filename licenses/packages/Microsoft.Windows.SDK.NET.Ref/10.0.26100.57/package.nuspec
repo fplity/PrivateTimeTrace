@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>Microsoft.Windows.SDK.NET.Ref</id>
+    <version>10.0.26100.57</version>
+    <title>Windows SDK for .NET 8 and later targeting pack for the .NET 9 SDK</title>
+    <authors>Microsoft</authors>
+    <owners>Microsoft</owners>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <licenseUrl>https://aka.ms/WinSDKLicenseURL</licenseUrl>
+    <projectUrl>https://aka.ms/WinSDKProjectURL</projectUrl>
+    <iconUrl>https://aka.ms/WinSDKIconURL</iconUrl>
+    <description>The Windows SDK available as a targeting pack for .NET 8 and later applications using the .NET 9 SDK.
+
+For further details, see: https://docs.microsoft.com/windows/apps/desktop/modernize/desktop-to-uwp-enhance</description>
+    <summary>The Windows SDK available as a targeting pack for .NET 8 and later applications using the .NET 9 SDK.</summary>
+    <copyright>© Microsoft Corporation. All rights reserved.</copyright>
+    <tags>WindowsSDK cswinrt targeting-pack</tags>
+    <serviceable>true</serviceable>
+    <packageTypes>
+      <packageType name="DotnetPlatform" />
+    </packageTypes>
+    <dependencies>
+      <group targetFramework=".NETCoreApp8.0" />
+    </dependencies>
+  </metadata>
+</package>

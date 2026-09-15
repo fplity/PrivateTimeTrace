@@ -1,0 +1,36 @@
+# Windows 发布指南
+
+本项目使用当前用户级 NSIS 安装器，不依赖 MSIX、开发者模式或自签测试证书。
+
+## 构建
+
+1. 修改项目文件中的 Version、AssemblyVersion、FileVersion，以及更新记录。版本号使用 `主.次.修订`。
+2. 使用 Windows x64、PowerShell 7 和 global.json 指定的 .NET SDK。运行 `tools/build-release.ps1`。
+3. 如需重建，传入一个新的 `-OutputDirectory`（必须在 `artifacts/` 下）；脚本不会删除或覆盖现有发布目录。
+4. 在交互桌面执行 UI 与安装测试，检查签名状态、版本、图标、许可、数据保留和哈希，再上传 Release。
+
+脚本执行核心检查、锁定依赖还原、自包含发布、第三方原文收集、安装器构建和 ZIP / SHA-256 生成。默认 NSIS 3.12 的 ZIP 使用固定 SHA-256 校验，安装器采用 zlib 压缩。首次下载若遭遇 SourceForge 镜像故障，应重试或核对官方下载，不能跳过哈希检查。
+
+依赖调整后，显式执行普通 `dotnet restore` 更新 `packages.lock.json`，复核版本和漏洞信息。`tools/collect-licenses.ps1` 从实际包及发布运行包收集原文，无匹配许可会停止，不默认把新依赖标为 MIT。
+
+## 安装与卸载
+
+普通安装显示许可、组件选择和完成页。程序固定安装在当前用户的 `%LOCALAPPDATA%\Programs\PrivateTimeTrace`，不写入 HKLM、不建立服务、不请求管理员权限。使用 Windows「已安装的应用」或开始菜单的卸载入口移除。
+
+静默安装要求调用方已经阅读并接受分发包内的适用许可：
+
+```powershell
+.\PrivateTimeTrace-1.0.0-win-x64-Setup.exe /S /ACCEPTLICENSES
+```
+
+不带 `/ACCEPTLICENSES` 的静默安装返回 3。目标目录包含未知安装标记 / 无标记且已有其他文件时返回 5；发现目标程序正在使用时返回 6，请先自行关闭窗口后重试。不会强制终止你的程序或删除数据。
+
+卸载只删除本包列出的文件和专用快捷方式、注册表项，不递归删除安装目录。不属于本包的额外文件会保留。学习数据库位于独立的 `%LOCALAPPDATA%\PrivateTimeTrace`，不会因卸载而删除。
+
+`/TESTINSTALL` 仅供自动验证：固定使用 `PrivateTimeTrace.InstallTest` 安装目录、独立卸载注册表项和带「安装验证」的快捷方式。测试进程必须使用隔离 `--data-file` 参数，不对正式数据目录做写入测试。
+
+## 发布文件
+
+仅上传 `*-Setup.exe`、免安装 `*.zip` 与 `SHA256SUMS.txt`，不上传 work/、数据库、调试符号、测试日志或证书。所有首次发布文件当前均未进行 Authenticode 签名；哈希证明一致性，不替代发布者身份认证。
+
+GitHub Actions 仅构建和上传 CI 产物，使用只读仓库权限，不自动创建正式 Release。发布需要维护者检查产物后手动创建版本。建议发布前备份学习数据库并阅读 [许可声明](../THIRD_PARTY_NOTICES.md)。
