@@ -27,10 +27,11 @@ public sealed class StudyChart : Canvas
     private void Draw()
     {
         Children.Clear();
-        if (ActualWidth < 80) return;
         var points = Points ?? Array.Empty<ChartPoint>();
-        // Wide sets remain readable and reachable through the containing ScrollViewer.
-        MinWidth = points.Count > 12 ? Math.Min(12000, points.Count * 46 + 60) : 0;
+        // A full day/month must fit in the card, including late hours/month-end.
+        // Keep horizontal scrolling for many topic names or multi-year history only.
+        MinWidth = points.Count > (Categories ? 12 : 31) ? Math.Min(12000, points.Count * 46 + 60) : 0;
+        if (ActualWidth < 80) return;
         const double left = 42, top = 28, bottom = 40, right = 18;
         var width = Math.Max(1, ActualWidth - left - right);
         var height = Math.Max(1, ActualHeight - top - bottom);
@@ -56,6 +57,9 @@ public sealed class StudyChart : Canvas
         }
 
         var slot = width / points.Count;
+        // Thin axis labels, never the data. Reserve enough room for both endpoints.
+        var labelStep = Categories ? 1 : Math.Max(1, (int)Math.Ceiling(36 / slot));
+        var labelWidth = Categories ? slot - 4 : Math.Max(32, slot - 4);
         var coordinates = points.Select((point, index) => new Point(left + slot * (index + .5), top + height * (1 - Math.Max(0, point.Minutes) / ceiling))).ToList();
         if (Kind == ChartKind.Line)
         {
@@ -93,8 +97,11 @@ public sealed class StudyChart : Canvas
             Children.Add(mark);
             if (points.Count <= 12 && point.Minutes > 0)
                 Label(inHours ? $"{point.Minutes / 60:0.#}h" : $"{point.Minutes:0.#}m", position.X - slot / 2, position.Y - 23, slot, ink, TextAlignment.Center, 11);
-            var label = Label(point.Label, position.X - slot / 2 + 2, top + height + 14, slot - 4, ink, TextAlignment.Center, 11);
-            ToolTipService.SetToolTip(label, summary);
+            if (index == points.Count - 1 || (index % labelStep == 0 && (index == 0 || points.Count - 1 - index >= labelStep)))
+            {
+                var label = Label(point.Label, position.X - labelWidth / 2, top + height + 14, labelWidth, ink, TextAlignment.Center, 11);
+                ToolTipService.SetToolTip(label, summary);
+            }
         }
     }
 

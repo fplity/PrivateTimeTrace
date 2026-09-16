@@ -13,7 +13,7 @@
 
 ![液态流光 · 真实 Windows 应用截图](docs/screenshots/liquid.png)
 
-时间迹是一款专注于「记录学习 → 回顾投入 → 观察趋势」的 Windows 桌面应用。使用 **C# + .NET 10 + WinUI 3 + MVVM + SQLite** 构建，不是网页套壳，也不是手机 APK。v1.1.0 在现有本地计时与统计能力之上，加入了克制的按钮选择动效：选择胶囊会随方向产生轻微形变、回弹和指针高光，帮助用户确认当前状态。
+时间迹是一款专注于「记录学习 → 回顾投入 → 观察趋势」的 Windows 桌面应用。使用 **C# + .NET 10 + WinUI 3 + MVVM + SQLite** 构建，不是网页套壳，也不是手机 APK。v1.1.1 修复了日 / 月趋势图在卡片内的可见性：完整的 24 小时或整月数据会适配卡片宽度，抽稀坐标标签但保留所有数据点和首尾标签。它也保留 v1.1.0 的按钮选择动效：选择胶囊会随方向产生轻微形变、回弹和指针高光，帮助用户确认当前状态。
 
 无需账号，没有双端同步。应用自己不上传学习记录、不接入广告或行为分析服务。
 
@@ -23,8 +23,8 @@
 
 | 文件 | 用途 |
 | --- | --- |
-| `PrivateTimeTrace-1.1.0-win-x64-Setup.exe` | 推荐：安装到当前用户，提供开始菜单入口、可选桌面快捷方式和卸载入口 |
-| `PrivateTimeTrace-1.1.0-win-x64.zip` | 免安装文件夹：完整解压后打开 `PrivateTimeTrace.exe`，不能只复制 exe |
+| `PrivateTimeTrace-1.1.1-win-x64-Setup.exe` | 推荐：安装到当前用户，提供开始菜单入口、可选桌面快捷方式和卸载入口 |
+| `PrivateTimeTrace-1.1.1-win-x64.zip` | 免安装文件夹：完整解压后打开 `PrivateTimeTrace.exe`，不能只复制 exe |
 | `SHA256SUMS.txt` | 下载文件的 SHA-256 校验值 |
 
 已包含 .NET 和 Windows App SDK 运行组件，不需要安装开发环境、开启开发者模式或导入测试证书。首次公开版本**没有商业代码签名证书**，Windows 可能提示未知发布者；请只使用本仓库 Release 的文件，并核对哈希。不要为安装程序关闭系统安全防护。
@@ -50,6 +50,13 @@
 ![霜白玻璃 · 真实 Windows 应用截图](docs/screenshots/frosted.png)
 
 以上是带隔离演示数据的真实运行截图，不是概念图。界面采用 WinUI 原生 Acrylic、玻璃亮边、层级阴影与轻量动效。v1.1.0 的连续形变、回弹和指针高光只发生在按钮内部；卡片、壁纸、图表内容和页面背景保持静态，除非真实数据或风格发生变化。它是独立的 Windows 视觉设计，并非苹果私有 Liquid Glass 渲染器，也不代表与 Apple 或 Microsoft 存在隶属或背书关系。系统关闭动画 / 高级效果时会减少特效。
+
+### v1.1.1 图表末端可见性
+
+日趋势图的 00–23 小时轴和月趋势图的月末轴会完整适配卡片；在空间有限时只抽稀横轴标签，不隐藏数据点。下面是使用隔离 fixture 数据的验证截图，不包含用户本地记录。
+
+![日趋势图末端可见性验证](docs/screenshots/chart-fix-day-line-frosted.png)
+![月趋势图末端可见性验证](docs/screenshots/chart-fix-month-bar-liquid.png)
 
 ## 数据与隐私
 
@@ -81,19 +88,20 @@ dotnet build PrivateTimeTrace.csproj -c Debug -p:Platform=x64 -r win-x64
 pwsh -NoProfile -File tools/build-release.ps1
 ```
 
-输出到 `artifacts/releases/v1.1.0/`。脚本使用新目录，拒绝覆盖现有发布产物。NSIS 3.12 在项目 `.tools/` 内按固定 SHA-256 下载，不进行系统级安装。构建说明和静默安装参数见 [发布指南](docs/releasing.md)。
+输出到 `artifacts/releases/v1.1.1/`。脚本使用新目录，拒绝覆盖现有发布产物；本次已发布的最终资产保存在 `artifacts/releases/v1.1.1-chart-fix/`。NSIS 3.12 在项目 `.tools/` 内按固定 SHA-256 下载，不进行系统级安装。构建说明和静默安装参数见 [发布指南](docs/releasing.md)。
 
 ### 验证
 
 ```powershell
 dotnet run --project tests/PrivateTimeTrace.Checks/PrivateTimeTrace.Checks.csproj -c Release
 pwsh -NoProfile -File tools/verify-ui.ps1 -FixturePath "$PWD\artifacts\qa\new-ui-check.db"
-pwsh -NoProfile -File tools/verify-installer.ps1 -InstallerPath "$PWD\artifacts\releases\v1.1.0\PrivateTimeTrace-1.1.0-win-x64-Setup.exe"
+pwsh -NoProfile -File tools/verify-installer.ps1 -InstallerPath "$PWD\artifacts\releases\v1.1.1-chart-fix\PrivateTimeTrace-1.1.1-win-x64-Setup.exe"
+pwsh -NoProfile -File tools/verify-chart-visibility.ps1 -ExePath "$PWD\artifacts\releases\v1.1.1-chart-fix\work\app\PrivateTimeTrace.exe" -OutputDirectory "$PWD\artifacts\qa\chart-visibility-v111-new"
 ```
 
 核心检查覆盖时间裁剪、统计一致性、SQLite 迁移、计时恢复与偏好保存。UI 验证需已登录的交互桌面，使用隔离数据库；请不要操作验证中的测试窗口。安装测试使用独立安装目录和注册表项，不向真实数据写入演示记录。
 
-验证边界和本次执行结果见 [UI 验证记录](docs/verification-report.md)及[发布验证记录](docs/release-verification.md)。发布前必须把最终包的安装、卸载、数据保留、哈希和实际窗口证据补齐；CI 构建成功不等于所有 Windows 设备均通过实际界面验证。
+验证边界和本次执行结果见 [UI 验证记录](docs/verification-report.md)及[1.1.1 发布验证记录](docs/release-verification-v1.1.1.md)。发布前必须把最终包的安装、卸载、数据保留、哈希和实际窗口证据补齐；CI 构建成功不等于所有 Windows 设备均通过实际界面验证。
 
 ## 项目结构
 

@@ -14,6 +14,22 @@ if (args is ["--fingerprint", var fingerprintPath])
     Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(new { Count = records.Count, RecordsHash = Hash(records.OrderBy(record => record.Id).ToArray()), HasActiveSession = active is not null, ActiveHash = Hash(active) }));
     return;
 }
+if (args is ["--seed-chart-visibility", var chartSeedPath, var chartPeriod])
+{
+    if (File.Exists(chartSeedPath)) throw new InvalidOperationException("Refusing to overwrite an existing database.");
+    var seed = new StudyDatabase(chartSeedPath);
+    await seed.InitializeAsync();
+    // Deliberately place the only record at the far right of each axis, in an isolated fixture.
+    var date = chartPeriod switch
+    {
+        "Day" => DateTime.Today,
+        "Month" => new DateTime(DateTime.Today.Year, DateTime.Today.Month, DateTime.DaysInMonth(DateTime.Today.Year, DateTime.Today.Month)),
+        _ => throw new ArgumentException("Expected Day or Month.")
+    };
+    await seed.AddRecordAsync(Record(date.AddHours(23), date.AddHours(23).AddMinutes(14), "图表末端可见性验证"));
+    Console.WriteLine($"Seeded isolated {chartPeriod} chart fixture: {Path.GetFullPath(chartSeedPath)}");
+    return;
+}
 if (args is ["--seed", var seedPath])
 {
     if (File.Exists(seedPath)) throw new InvalidOperationException("Refusing to overwrite an existing database.");
@@ -59,6 +75,24 @@ var crossing = new[] { Record(anchor.AddMinutes(-30), anchor.AddMinutes(30), "Ja
 Run("Cross-midnight: today receives only 30 minutes", () => Near(30, StudyAnalytics.TotalDuration(crossing, ReportPeriod.Day, anchor).TotalMinutes));
 Run("Cross-midnight: previous day receives only 30 minutes", () => Near(30, StudyAnalytics.TotalDuration(crossing, ReportPeriod.Day, anchor.AddDays(-1)).TotalMinutes));
 Run("Exclusive period end does not double count", () => Check(StudyAnalytics.InPeriod(new[] { Record(anchor.AddHours(-1), anchor) }, ReportPeriod.Day, anchor).Count == 0, "Boundary"));
+Run("Day chart retains a lone 14-minute record at 23:00", () =>
+{
+    var points = StudyAnalytics.Trend(new[] { Record(anchor.AddHours(23), anchor.AddHours(23).AddMinutes(14)) }, ReportPeriod.Day, anchor);
+    Check(points.Count == 24 && points[^1].Label == "23", "Full day axis");
+    Near(14, points[^1].Minutes);
+    Near(14, points.Sum(point => point.Minutes));
+});
+Run("Month chart retains the last day for 28, 29, 30 and 31 day months", () =>
+{
+    foreach (var first in new[] { new DateTime(2026, 2, 1), new DateTime(2028, 2, 1), new DateTime(2026, 9, 1), new DateTime(2026, 1, 1) })
+    {
+        var last = first.AddMonths(1).AddDays(-1);
+        var points = StudyAnalytics.Trend(new[] { Record(last.AddHours(23), last.AddHours(23).AddMinutes(14)) }, ReportPeriod.Month, first);
+        Check(points.Count == last.Day && points[^1].Label == last.Day.ToString(), "Full month axis");
+        Near(14, points[^1].Minutes);
+        Near(14, points.Sum(point => point.Minutes));
+    }
+});
 var set = new[] { crossing[0], Record(anchor.AddDays(-3), anchor.AddDays(-3).AddHours(2), "Java"), Record(anchor.AddHours(1), anchor.AddHours(2), "英语"), Record(anchor.AddMonths(-4), anchor.AddMonths(-4).AddMinutes(50), "  英语  "), Record(anchor.AddDays(-1).AddMinutes(-40), anchor.AddDays(-1).AddMinutes(20), " ") };
 foreach (var period in Enum.GetValues<ReportPeriod>())
     Run($"{period}: total = sum(trend) = sum(topics)", () =>
