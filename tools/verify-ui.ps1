@@ -3,6 +3,13 @@ param(
     [string]$FixturePath
 )
 $ErrorActionPreference = 'Stop'
+Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+public static class UiVerificationNative {
+    [DllImport("user32.dll")] public static extern bool SetWindowPos(IntPtr window, IntPtr after, int x, int y, int width, int height, uint flags);
+}
+'@
 $projectRoot = [IO.Path]::GetFullPath("$PSScriptRoot\..")
 if (!$ExePath) {
     [xml]$project = Get-Content -LiteralPath "$projectRoot\PrivateTimeTrace.csproj" -Raw
@@ -22,13 +29,15 @@ if (Test-Path -LiteralPath $FixturePath) { throw 'Choose a new fixture filename;
 if ($LASTEXITCODE) { throw 'Fixture generation failed.' }
 $script:preview = $null
 function Open-Preview {
-    $script:preview = Start-Process -FilePath $ExePath -ArgumentList '--data-file', ('"' + $FixturePath + '"') -PassThru
+    $script:preview = Start-Process -FilePath $ExePath -ArgumentList '--data-file', ('"' + $FixturePath + '"'), '--background-test' -PassThru
     for ($attempt = 0; $attempt -lt 25; $attempt++) {
         Start-Sleep -Milliseconds 200
         $script:preview.Refresh()
         if ($script:preview.HasExited -or $script:preview.MainWindowHandle) { break }
     }
     if ($script:preview.HasExited -or !$script:preview.MainWindowHandle) { throw 'Release has no visible window.' }
+    # UIA and PrintWindow work while occluded. Keep automated fixture windows behind the user's apps.
+    [UiVerificationNative]::SetWindowPos($script:preview.MainWindowHandle,[IntPtr]1,0,0,0,0,0x13) | Out-Null
     Start-Sleep -Milliseconds 1000
     "Opened release PID $($script:preview.Id)"
 }
@@ -44,6 +53,16 @@ function State {
     $result = & $dotnet $checks --inspect $FixturePath
     if ($LASTEXITCODE) { throw 'Could not read fixture.' }
     return $result | ConvertFrom-Json
+}
+function Wait-Preferences([string]$Style, [string]$Trend, [string]$Topic) {
+    # Preference writes are asynchronous and serialized; observe completion rather than assume a fixed frame delay.
+    $deadline = [DateTime]::UtcNow.AddSeconds(5)
+    do {
+        $saved = State
+        if ($saved.Style -eq $Style -and $saved.Trend -eq $Trend -and $saved.Topic -eq $Topic) { return }
+        Start-Sleep -Milliseconds 100
+    } while ([DateTime]::UtcNow -lt $deadline)
+    throw "Preferences did not settle. Expected=$Style/$Trend/$Topic Actual=$($saved.Style)/$($saved.Trend)/$($saved.Topic)"
 }
 function Capture([string]$File) {
     & $powershell -NoProfile -ExecutionPolicy Bypass -File $helper -AppProcessId $script:preview.Id -Action Capture -OutputPath "$qaRoot$File"
@@ -66,8 +85,7 @@ try {
                 Ui 'Click' "Style$style"
                 Ui 'Click' "Trend$trend"
                 Ui 'Click' "Topic$topic"
-                $saved = State
-                if ($saved.Style -ne $style -or $saved.Trend -ne $trend -or $saved.Topic -ne $topic) { throw 'Style or chart choice did not persist independently.' }
+                Wait-Preferences $style $trend $topic
                 "PASS release UI combination: $style / $trend / $topic"
                 if ($style -eq 'Liquid' -and $trend -eq 'Line' -and $topic -eq 'Bar') { Capture 'release-liquid.png' }
                 if ($style -eq 'Frosted' -and $trend -eq 'Bar' -and $topic -eq 'Line') { Capture 'release-frosted.png' }

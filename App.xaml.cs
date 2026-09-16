@@ -51,7 +51,7 @@ public partial class App : Application
         InitializeComponent();
         UnhandledException += (_, eventArgs) =>
         {
-            var directory = Path.Combine(
+            var directory = DatabasePath is not null ? Path.GetDirectoryName(DatabasePath)! : Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 "PrivateTimeTrace");
             Directory.CreateDirectory(directory);
@@ -72,6 +72,8 @@ public partial class App : Application
         if (dataArgument >= 0 && dataArgument + 1 < arguments.Length) DatabasePath = Path.GetFullPath(arguments[dataArgument + 1]);
         Window = new MainWindow();
         DispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
-        Window.Activate();
+        // Isolated UI automation can show a real window without taking the user's keyboard focus.
+        if (DatabasePath is not null && arguments.Contains("--background-test")) Window.AppWindow.Show(false);
+        else Window.Activate();
     }
 }

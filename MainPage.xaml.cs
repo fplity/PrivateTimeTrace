@@ -25,20 +25,21 @@ public sealed partial class MainPage : Page
         TrendBar.Checked += Trend_Click;
         TopicLine.Checked += Topic_Click;
         TopicBar.Checked += Topic_Click;
+        OverviewNav.Checked += Navigation_Checked;
+        RecordsNav.Checked += Navigation_Checked;
+        AnalyticsNav.Checked += Navigation_Checked;
         ViewModel.PropertyChanged += ViewModel_PropertyChanged;
         TopicChart.CategoryClicked += (_, topic) => { ViewModel.ShowTopic(topic); RecordsNav.IsChecked = true; };
         Loaded += async (_, _) =>
         {
             await ViewModel.InitializeAsync();
             SyncPreferences();
-            Motion.Wire(this);
         };
     }
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs args)
     {
         if (App.IsClosing) return;
         if (args.PropertyName is nameof(ViewModel.Style) or nameof(ViewModel.TrendKind) or nameof(ViewModel.TopicKind)) SyncPreferences();
-        if (args.PropertyName == nameof(ViewModel.Style) && IsLoaded) Motion.Reveal(MainStack);
     }
     private void SyncPreferences()
     {
@@ -75,7 +76,12 @@ public sealed partial class MainPage : Page
     }
     private void Period_Click(object sender, RoutedEventArgs args)
     {
-        if (sender is FrameworkElement { Tag: string name } && Enum.TryParse<ReportPeriod>(name, out var period)) ViewModel.SetPeriod(period);
+        if (_ready && sender is FrameworkElement { Tag: string name } && Enum.TryParse<ReportPeriod>(name, out var period) && ViewModel.SelectedPeriod != period) ViewModel.SetPeriod(period);
+    }
+    private void Navigation_Checked(object sender, RoutedEventArgs args)
+    {
+        // Topic drill-down sets the section before its radio; keep its topic filter intact.
+        if (_ready && sender is FrameworkElement { Tag: string section } && ViewModel.CurrentSection != section) Navigation_Click(sender, args);
     }
     private void Navigation_Click(object sender, RoutedEventArgs args)
     {
@@ -84,7 +90,6 @@ public sealed partial class MainPage : Page
             ViewModel.Navigate(section);
             OverviewNav.IsChecked = section == "Overview"; RecordsNav.IsChecked = section == "Records"; AnalyticsNav.IsChecked = section == "Analytics";
             MainScroll.ChangeView(null, 0, null);
-            Motion.Reveal(MainStack);
         }
     }
     private void TopicDetails_Click(object sender, RoutedEventArgs args)
@@ -115,13 +120,5 @@ public sealed partial class MainPage : Page
         FocusGrid.ColumnDefinitions[1].Width = stackedSummary ? new GridLength(0) : new GridLength(1, GridUnitType.Star);
         MainStack.Margin = new Thickness(narrow ? 20 : 28, 12, narrow ? 20 : 28, 28);
         HeaderGrid.Margin = new Thickness(narrow ? 24 : 32, 16, narrow ? 24 : 32, 8);
-    }
-    private void Window_PointerMoved(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs args)
-    {
-        if (!ViewModel.UseLiquidStyle || App.ReducedEffects) return;
-        var position = args.GetCurrentPoint(WindowRoot).Position;
-        var transform = (TranslateTransform)Wallpaper.RenderTransform;
-        transform.X = (position.X / Math.Max(1, ActualWidth) - .5) * 5;
-        transform.Y = (position.Y / Math.Max(1, ActualHeight) - .5) * 4;
     }
 }

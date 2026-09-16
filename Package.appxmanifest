@@ -10,7 +10,7 @@
   <Identity
     Name="AB8C02A3-DAE8-46AF-8A32-A8BD1D33A758"
     Publisher="CN=fplity"
-    Version="1.0.0.0" />
+    Version="1.1.0.0" />
 
   <mp:PhoneIdentity PhoneProductId="AB8C02A3-DAE8-46AF-8A32-A8BD1D33A758" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 

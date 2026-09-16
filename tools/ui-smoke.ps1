@@ -58,7 +58,7 @@ switch ($Action) {
     'Click' {
         $control = Find-Control
         if (!$control.Current.IsEnabled -or $control.Current.IsOffscreen) { throw 'Control is disabled or offscreen.' }
-        if ($AutomationId -match '^(Style|Trend(Line|Bar)|Topic(Line|Bar))') {
+        if ($AutomationId -match '^(Style|Trend(Line|Bar)|Topic(Line|Bar)|Nav|Period)') {
             $control.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Select()
             Start-Sleep -Milliseconds 450
             "Selected through native accessibility: $AutomationId"
@@ -99,7 +99,7 @@ switch ($Action) {
             $Width = [int]($Width * $scale)
             $Height = [int]($Height * $scale)
         }
-        [TimeTraceNative]::SetWindowPos($windowHandle, [IntPtr]::Zero, 24, 24, $Width, $Height, 4) | Out-Null
+        [TimeTraceNative]::SetWindowPos($windowHandle, [IntPtr]::Zero, 24, 24, $Width, $Height, 0x14) | Out-Null
         Start-Sleep -Milliseconds 500
         "Resized: $Width x $Height"
     }

@@ -20,3 +20,18 @@
 背景由 imagegen 生成并保存为 `Assets/LiquidBackdrop.png`：无文字的珍珠银蓝空间、透明弧形玻璃带、左上方暖白环境光、右下方较深的蓝灰层次。生成素材仅用于环境底图；可读内容、折线与柱形、导航、计时及交互均由 WinUI 原生绘制。
 
 最终实施及实际窗口验证结果见 `docs/verification-report.md`。
+
+## 1.1.0：仅按钮交互的液态动效
+
+2026-09-15 用户收窄范围：只做按钮切换交互，不做全局动效。当前以此为准。
+
+- `LiquidSelector` 为风格、导航、统计周期、两组图表模式提供一块连续移动的选中胶囊；约 520ms 位移、560ms 定向形变及轻微回弹，霜白版本更克制。
+- `LiquidLight` 只挂在按钮和切换轨道内部：入射高光、背向冷色反射、弧形流光、边缘亮线。鼠标输入从原生 RadioButton 接收；光影用 Composition 属性动画平滑跟随。
+- 内容卡片保持静态磨砂和边框；没有卡片指针光、全局光源、背景视差或页面 / 图表淡入动画。图表只在数据或模式改变时重绘。
+- 文字与点击区域不参与胶囊拉伸；鼠标、方向键、Home / End、辅助功能选择共用相同的 RadioButton 选中状态。
+- 快速反向切换从当前画面继续，窗口重排直接对齐到新尺寸。卸载控件时解除输入事件并停止 Composition 动画。
+- 遵循 Windows 减少动画 / 高对比设置；没有新增依赖、云同步、数据迁移或在线服务。
+
+设计研究参考 [Apple Meet Liquid Glass](https://developer.apple.com/videos/play/wwdc2025/219/) 的连续形变、局部输入反馈及可读性原则；实现使用 [WinUI Composition](https://learn.microsoft.com/en-us/windows/apps/develop/composition/pointer-input-animations)。这是 Windows 原生的视觉近似，不是 Apple 私有渲染引擎或真实物理折射。
+
+按钮动效的可复现截图与测试入口见 `tools/verify-liquid-motion.ps1`；功能回归见 `tools/verify-ui.ps1`。

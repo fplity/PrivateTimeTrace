@@ -3,7 +3,6 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Markup;
 using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Shapes;
 using Windows.Foundation;
 using Windows.UI;
 
@@ -23,8 +22,6 @@ public sealed class GlassPanel : UserControl
     private readonly Border _surface;
     private readonly Border _rim;
     private readonly Border _innerRim;
-    private readonly Grid _lights = new() { IsHitTestVisible = false };
-    private readonly Ellipse _shine;
 
     public GlassPanel()
     {
@@ -40,25 +37,9 @@ public sealed class GlassPanel : UserControl
             BorderBrush = Gradient((0, "#AAFFFFFF"), (.25, "#05FFFFFF"), (.75, "#08FFFFFF"), (1, "#80FFFFFF")) };
         root.Children.Add(_rim);
         root.Children.Add(_innerRim);
-        _shine = new Ellipse { Width = 420, Height = 210, HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top, Opacity = 0,
-            Fill = new RadialGradientBrush { Center = new Point(.5, .5), RadiusX = .5, RadiusY = .5, GradientStops = {
-                new GradientStop { Offset = 0, Color = Parse("#C8FFFFFF") }, new GradientStop { Offset = .45, Color = Parse("#48FFFFFF") }, new GradientStop { Offset = 1, Color = Parse("#00FFFFFF") } } },
-            RenderTransform = new TranslateTransform() };
-        _lights.Children.Add(_shine);
-        root.Children.Add(_lights);
         _presenter.SetBinding(ContentPresenter.PaddingProperty, new Microsoft.UI.Xaml.Data.Binding { Source = this, Path = new PropertyPath(nameof(Padding)) });
         root.Children.Add(_presenter);
         Content = root;
-        SizeChanged += (_, _) => _lights.Clip = new RectangleGeometry { Rect = new Rect(0, 0, ActualWidth, ActualHeight) };
-        PointerMoved += (_, args) =>
-        {
-            if (!IsLiquid || App.ReducedEffects) return;
-            var point = args.GetCurrentPoint(this).Position;
-            ((TranslateTransform)_shine.RenderTransform).X = point.X - 210;
-            ((TranslateTransform)_shine.RenderTransform).Y = point.Y - 130;
-            _shine.Opacity = .48;
-        };
-        PointerExited += (_, _) => _shine.Opacity = 0;
         Loaded += (_, _) => ApplyMaterial();
     }
 
@@ -73,7 +54,6 @@ public sealed class GlassPanel : UserControl
         _surface.Translation = new Vector3(0, 0, liquid ? 18 : 4);
         _rim.Opacity = liquid ? 1 : .55;
         _innerRim.Opacity = liquid ? 1 : .15;
-        if (!liquid) _shine.Opacity = 0;
     }
 
     private static void OnBodyChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args) => ((GlassPanel)sender)._presenter.Content = args.NewValue;

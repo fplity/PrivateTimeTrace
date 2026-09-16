@@ -22,7 +22,6 @@ public sealed class StudyChart : Canvas
     {
         var chart = (StudyChart)sender;
         chart.Draw();
-        if (chart.IsLoaded) Motion.Reveal(chart);
     }
 
     private void Draw()
