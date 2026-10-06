@@ -19,6 +19,6 @@ Use case: logo-brand. Asset type: final Windows desktop application icon, square
 
 `Assets/LiquidBackdrop.png` 为本项目使用内置 imagegen 生成的环境背景。`docs/design/` 为设计阶段概念参考，不是实际运行证明。
 
-`docs/screenshots/` 的两张图片是本项目原生窗口截图，使用隔离演示数据库，不包含用户真实学习数据。控件、图表、导航、计时与记录列表由 WinUI 原生实现。
+`docs/screenshots/` 中的 `liquid.png`、`frosted.png` 是两套视觉风格的原生窗口截图；`chart-fix-day-line-frosted.png`、`chart-fix-month-bar-liquid.png` 是 v1.1.1 日／月图表末端可见性的验证截图。它们使用隔离演示数据库，不包含用户真实学习数据。控件、图表、导航、计时与记录列表由 WinUI 原生实现。
 
 系统字体由 Windows 提供，不复制或分发字体文件。内嵌界面符号使用系统字体。安装器使用 NSIS 自带标准向导资源，相关许可见 `licenses/upstream/NSIS-COPYING.txt`。
